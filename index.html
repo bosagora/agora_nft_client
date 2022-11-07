@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Agora NFT Marketplace Dapp</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.14.1/css/mdb.min.css" rel="stylesheet">
+    <script src="./metamask-onboarding.bundle.js"></script>
+</head>
+
+<body>
+<main class="container-fluid">
+    <header>
+        <h1 class="text-center">Agora NFT Marketplace DApp</h1>
+    </header>
+    <section>
+        <div class="card">
+            <h4 class="card-header">
+                <form>
+                    <button id="metamask" type="submit" class="btn btn-primary btn-block">Connect to Blockchain with Metamask</button>
+                </form>
+            </h4>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                        <p class="info-text alert-secondary">Network: <span id="network"></span></p>
+                    </div>
+                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                        <p class="info-text alert-secondary">ChainId: <span id="chain"></span></p>
+                    </div>
+                    <div class="col-xl-8 col-lg-12 col-md-24 col-sm-24 col-24">
+                        <p class="info-text alert-secondary">Accounts: <span id="account"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const metamaskButton = document.getElementById('metamask')
+        const onboarding = new MetaMaskOnboarding();
+        const accountText = document.getElementById('account')
+        const networkText = document.getElementById('network')
+        const chainText = document.getElementById('chain')
+        let accounts;
+
+        const updateChainIdText = async () => {
+            await window.ethereum.request({
+                method: 'eth_chainId',
+            }).catch((e) => {
+                console.error(e.message)
+                return;
+            }).then((chainId) => {
+                chainText.innerText = chainId;
+                if (chainId == 2151) {
+                    networkText.innerText = "Agora Mainnet";
+                } else if (chainId == 2019) {
+                    networkText.innerText = "Agora Testnet";
+                } else {
+                    networkText.innerText = "Not Agora known network";
+                }
+            }
+            );
+        }
+        const updateButton = () => {
+            if (!MetaMaskOnboarding.isMetaMaskInstalled()) {
+                metamaskButton.innerText = 'Click here to install MetaMask!';
+                metamaskButton.onclick = () => {
+                    metamaskButton.innerText = 'Onboarding in progress';
+                    metamaskButton.disabled = true;
+                    onboarding.startOnboarding();
+                };
+            } else if (accounts && accounts.length > 0) {
+                metamaskButton.innerText = 'Connected';
+                metamaskButton.disabled = true;
+                onboarding.stopOnboarding();
+                accountText.innerText = accounts[0];
+                updateChainIdText();
+            } else {
+                metamaskButton.innerText = 'Connect';
+                metamaskButton.onclick = async () => {
+                    await window.ethereum.request({
+                        method: 'eth_requestAccounts',
+                    }).catch((e) => {
+                        console.error(e.message)
+                        return;
+                    })
+                };
+            }
+        };
+        updateButton();
+        if (MetaMaskOnboarding.isMetaMaskInstalled()) {
+            window.ethereum.on('accountsChanged', (newAccounts) => {
+                accounts = newAccounts;
+                updateButton();
+            });
+            window.ethereum.on('chainChanged', (_chainId) => {
+                window.location.reload();
+            });
+        }
+    })
+</script>
+</body>
+
+</html>
