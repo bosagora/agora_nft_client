@@ -6,7 +6,7 @@
 ```
 
 ## Public site at Github pages:
-https://bosagora.github.io/agora_nft_client/
+https://bosagora.github.io/boa_space_static_website/
 
 ## Networks:
 ### `Agora Mainnet` : chainId `2151` (0x867)
