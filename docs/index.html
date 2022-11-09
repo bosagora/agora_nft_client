@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.14.1/css/mdb.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.8.0/web3.min.js"></script>
     <script src="metamask-onboarding.bundle.js"></script>
 </head>
 
@@ -17,22 +18,41 @@
         <h1 class="text-center">BOA SPACE: Agora NFT Marketplace Dapp</h1>
     </header>
     <section>
-        <div class="card">
+        <div class="card" id="metamask_card">
             <h4 class="card-header">
                 <form>
-                    <button id="metamask" type="submit" class="btn btn-primary btn-block">Connect to Blockchain with Metamask</button>
+                    <button id="metamask" type="button" class="btn btn-primary">Connect to Metamask</button>
                 </form>
             </h4>
             <div class="card-body">
                 <div class="row">
                     <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
-                        <p class="info-text alert-secondary">Network: <span id="network" class="info-text alert-primary"></span></p>
+                        <p class="info-text alert-secondary">Network: <span id="network"
+                                                                            class="info-text alert-primary"></span></p>
                     </div>
                     <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
                         <p class="info-text alert-secondary">ChainId: <span id="chain"></span></p>
                     </div>
                     <div class="col-xl-8 col-lg-12 col-md-24 col-sm-24 col-24">
-                        <p class="info-text alert-secondary">Accounts: <span id="account"></span></p>
+                        <p class="info-text alert-secondary">Account: <span id="account"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card" id="login_card">
+            <h4 class="card-header">
+                <form>
+                    <button id="login" type="button" class="btn btn-secondary">Login to BOA SPACE</button>
+                </form>
+            </h4>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                        <p class="info-text alert-secondary">Nonce: <span id="nonce"
+                                                                          class="info-text alert-primary"></span></p>
+                    </div>
+                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                        <p class="info-text alert-secondary">Jwt: <span id="jwt"></span></p>
                     </div>
                 </div>
             </div>
@@ -44,11 +64,74 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         const metamaskButton = document.getElementById('metamask')
+        const loginButton = document.getElementById('login')
+        const loginCard = document.getElementById('login_card')
         const onboarding = new MetaMaskOnboarding()
         const accountText = document.getElementById('account')
         const networkText = document.getElementById('network')
         const chainText = document.getElementById('chain')
+        const nonceText = document.getElementById('nonce')
+        const jwtText = document.getElementById('jwt')
         let accounts
+        const fetchNonce = async (address) => {
+            fetch('http://localhost:4000/graphql', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: `{ getNonce(address: "` + address + `") }`})
+            }).catch(e => {
+                console.error('fetchNonce:' + e.message)
+            })
+                .then(res => res.json())
+                .catch(e => console.error(e.message))
+                .then(res => {
+                    const nonce = res.data.getNonce.toString()
+                    console.log('fetchNonce:' + nonce)
+                    nonceText.innerText = nonce
+                    return nonce
+                })
+        }
+        const signNonce = async (address, nonce) => {
+            const messageToSign = "BOA SPACE: address ownership proof by signing personal one time nonce of " + nonce
+            console.log("messageToSign = " + messageToSign)
+            return "good" // TODO: fix proper signing
+            // const web3 = new Web3(window.ethereum)
+            // web3.eth.personal.sign(messageToSign, address)
+            //     .then(signature => {
+            //             console.log("Signature = " + signature)
+            //             return signature
+            //         }
+            //     )
+        }
+        const fetchJwt = async (address, nonce) => {
+            signNonce(address, nonce).then(signature => {
+                fetch('http://localhost:4000/graphql', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query: `{ getJwt(address: "` + address + `", signature: "` + signature + `") }`})
+                }).catch(e => {
+                    console.error('fetchJwt:' + e.message)
+                }).then(res => res.json())
+                    .catch(e => console.error(e.message))
+                    .then(res => {
+                        const jwt = res.data.getJwt
+                        console.log('fetchJwt:' + jwt)
+                        jwtText.innerText = jwt
+                        return jwt
+                    })
+            })
+        }
+
+        function enableLogin(address) {
+            loginButton.innerText = "LOGIN TO BOA SPACE"
+            loginButton.onclick = () => {
+                fetchNonce(address)
+                    .catch(e => console.error('enableLogin.fetchNonce:' + e.message))
+                    .then(nonce => {
+                        fetchJwt(address, nonce)
+                            .catch(e => console.error('enableLogin.fetchJwt:' + e.message))
+                    })
+            }
+        }
 
         const updateChainIdText = async () => {
             await window.ethereum.request({
@@ -65,10 +148,10 @@
                 } else {
                     networkText.innerText = "Unknown network"
                 }
-            }
-            )
+            })
         }
-        const updateButton = () => {
+
+        function updateButton() {
             if (!MetaMaskOnboarding.isMetaMaskInstalled()) {
                 metamaskButton.innerText = 'Click here to install MetaMask!'
                 metamaskButton.onclick = () => {
@@ -77,13 +160,14 @@
                     onboarding.startOnboarding()
                 }
             } else if (accounts && accounts.length > 0) {
-                metamaskButton.innerText = 'Connected'
+                metamaskButton.innerText = 'Connected to Metamask'
                 metamaskButton.disabled = true
                 onboarding.stopOnboarding()
                 accountText.innerText = accounts[0]
                 updateChainIdText()
+                enableLogin()
             } else {
-                metamaskButton.innerText = 'Connect'
+                metamaskButton.innerText = 'Connect to Metamask'
                 metamaskButton.onclick = async () => {
                     await window.ethereum.request({
                         method: 'eth_requestAccounts',
@@ -94,13 +178,15 @@
                 }
             }
         }
+
         updateButton()
         if (MetaMaskOnboarding.isMetaMaskInstalled()) {
             window.ethereum.on('accountsChanged', (newAccounts) => {
                 accounts = newAccounts
                 updateButton()
             })
-            window.ethereum.on('chainChanged', (_chainId) => {
+            window.ethereum.on('chainChanged', (chainId) => {
+                alert("Reload due to chainId change to " + chainId)
                 window.location.reload()
             })
         }
