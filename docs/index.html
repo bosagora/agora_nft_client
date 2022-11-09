@@ -44,65 +44,65 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         const metamaskButton = document.getElementById('metamask')
-        const onboarding = new MetaMaskOnboarding();
+        const onboarding = new MetaMaskOnboarding()
         const accountText = document.getElementById('account')
         const networkText = document.getElementById('network')
         const chainText = document.getElementById('chain')
-        let accounts;
+        let accounts
 
         const updateChainIdText = async () => {
             await window.ethereum.request({
                 method: 'eth_chainId',
             }).catch((e) => {
                 console.error(e.message)
-                return;
+                return
             }).then((chainId) => {
-                chainText.innerText = chainId;
+                chainText.innerText = chainId
                 if (chainId == 2151) {
-                    networkText.innerText = "Agora Mainnet";
+                    networkText.innerText = "Agora Mainnet"
                 } else if (chainId == 2019) {
-                    networkText.innerText = "Agora Testnet";
+                    networkText.innerText = "Agora Testnet"
                 } else {
-                    networkText.innerText = "Unknown network";
+                    networkText.innerText = "Unknown network"
                 }
             }
-            );
+            )
         }
         const updateButton = () => {
             if (!MetaMaskOnboarding.isMetaMaskInstalled()) {
-                metamaskButton.innerText = 'Click here to install MetaMask!';
+                metamaskButton.innerText = 'Click here to install MetaMask!'
                 metamaskButton.onclick = () => {
-                    metamaskButton.innerText = 'Onboarding in progress';
-                    metamaskButton.disabled = true;
-                    onboarding.startOnboarding();
-                };
+                    metamaskButton.innerText = 'Onboarding in progress'
+                    metamaskButton.disabled = true
+                    onboarding.startOnboarding()
+                }
             } else if (accounts && accounts.length > 0) {
-                metamaskButton.innerText = 'Connected';
-                metamaskButton.disabled = true;
-                onboarding.stopOnboarding();
-                accountText.innerText = accounts[0];
-                updateChainIdText();
+                metamaskButton.innerText = 'Connected'
+                metamaskButton.disabled = true
+                onboarding.stopOnboarding()
+                accountText.innerText = accounts[0]
+                updateChainIdText()
             } else {
-                metamaskButton.innerText = 'Connect';
+                metamaskButton.innerText = 'Connect'
                 metamaskButton.onclick = async () => {
                     await window.ethereum.request({
                         method: 'eth_requestAccounts',
                     }).catch((e) => {
                         console.error(e.message)
-                        return;
+                        return
                     })
-                };
+                }
             }
-        };
-        updateButton();
+        }
+        updateButton()
         if (MetaMaskOnboarding.isMetaMaskInstalled()) {
             window.ethereum.on('accountsChanged', (newAccounts) => {
-                accounts = newAccounts;
-                updateButton();
-            });
+                accounts = newAccounts
+                updateButton()
+            })
             window.ethereum.on('chainChanged', (_chainId) => {
-                window.location.reload();
-            });
+                window.location.reload()
+            })
         }
     })
 </script>
