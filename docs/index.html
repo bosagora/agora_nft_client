@@ -73,8 +73,12 @@
         const nonceText = document.getElementById('nonce')
         const jwtText = document.getElementById('jwt')
         let accounts
-        const fetchNonce = async (address) => {
-            fetch('http://localhost:4000/graphql', {
+        let address
+        let signature
+        let nonce
+        let jwt
+        const fetchNonce = async () => {
+            await fetch('http://localhost:4000/graphql', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({query: `{ getNonce(address: "` + address + `") }`})
@@ -84,62 +88,62 @@
                 .then(res => res.json())
                 .catch(e => console.error(e.message))
                 .then(res => {
-                    const nonce = res.data.getNonce.toString()
+                    nonce = res.data.getNonce.toString()
                     console.log('fetchNonce:' + nonce)
                     nonceText.innerText = nonce
-                    return nonce
                 })
         }
-        const signNonce = async (address, nonce) => {
-            const messageToSign = "BOA SPACE: address ownership proof by signing personal one time nonce of " + nonce
+        const signNonce = async () => {
+            const messageToSign = "BOA SPACE: proof of account ownership by signing personal one time use nonce of " + nonce
             console.log("messageToSign = " + messageToSign)
-            return "good" // TODO: fix proper signing
-            // const web3 = new Web3(window.ethereum)
-            // web3.eth.personal.sign(messageToSign, address)
-            //     .then(signature => {
-            //             console.log("Signature = " + signature)
-            //             return signature
-            //         }
-            //     )
+            const web3 = new Web3(window.ethereum)
+            await web3.eth.personal.sign(messageToSign, address)
+                .then(sig => {
+                        console.log("Signature = " + sig)
+                        signature = sig
+                    }
+                )
         }
-        const fetchJwt = async (address, nonce) => {
-            signNonce(address, nonce).then(signature => {
-                fetch('http://localhost:4000/graphql', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({query: `{ getJwt(address: "` + address + `", signature: "` + signature + `") }`})
-                }).catch(e => {
-                    console.error('fetchJwt:' + e.message)
-                }).then(res => res.json())
-                    .catch(e => console.error(e.message))
-                    .then(res => {
-                        const jwt = res.data.getJwt
-                        console.log('fetchJwt:' + jwt)
-                        jwtText.innerText = jwt
-                        return jwt
+        const fetchJwt = async () => {
+            await signNonce()
+                .catch(e => console.error('fetchJwt:' + e.message))
+                .then(async () => {
+                    await fetch('http://localhost:4000/graphql', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({query: `{ getJwt(address: "` + address + `", signature: "` + signature + `") }`})
                     })
-            })
+                        .catch(e => console.error(e.message))
+                        .then(res => res.json())
+                        .catch(e => console.error(e.message))
+                        .then(res => {
+                            jwt = res.data.getJwt
+                            console.log('fetchJwt:' + jwt)
+                            jwtText.innerText = jwt
+                        })
+                })
         }
 
-        function enableLogin(address) {
+        function enableLogin() {
             loginButton.innerText = "LOGIN TO BOA SPACE"
-            loginButton.onclick = () => {
-                fetchNonce(address)
+            loginButton.onclick = async () => {
+                await fetchNonce()
                     .catch(e => console.error('enableLogin.fetchNonce:' + e.message))
-                    .then(nonce => {
-                        fetchJwt(address, nonce)
+                    .then(async () => {
+                        console.log('enableLogin.nonce:' + nonce)
+                        await fetchJwt()
                             .catch(e => console.error('enableLogin.fetchJwt:' + e.message))
+                            .then(() => console.log('enableLogin.fetchJwt:' + jwt))
                     })
             }
         }
 
         const updateChainIdText = async () => {
             await window.ethereum.request({
-                method: 'eth_chainId',
-            }).catch((e) => {
-                console.error(e.message)
-                return
-            }).then((chainId) => {
+                method: 'eth_chainId'
+            })
+                .catch(e => console.error(e.message))
+                .then((chainId) => {
                 chainText.innerText = chainId
                 if (chainId == 2151) {
                     networkText.innerText = "Agora Mainnet"
@@ -151,6 +155,18 @@
             })
         }
 
+        const getCoinbase = async () => {
+            await window.ethereum.request({
+                method: 'eth_coinbase'
+            })
+                .catch(e => console.error(e.message))
+                .then(coinbase => {
+                    console.log("coinbase = " + coinbase)
+                    address = coinbase
+                    console.log("address = " + address)
+                    accountText.innerText = address
+                })
+        }
         function updateButton() {
             if (!MetaMaskOnboarding.isMetaMaskInstalled()) {
                 metamaskButton.innerText = 'Click here to install MetaMask!'
@@ -163,22 +179,24 @@
                 metamaskButton.innerText = 'Connected to Metamask'
                 metamaskButton.disabled = true
                 onboarding.stopOnboarding()
-                accountText.innerText = accounts[0]
+                getCoinbase()
                 updateChainIdText()
                 enableLogin()
             } else {
                 metamaskButton.innerText = 'Connect to Metamask'
                 metamaskButton.onclick = async () => {
                     await window.ethereum.request({
-                        method: 'eth_requestAccounts',
-                    }).catch((e) => {
-                        console.error(e.message)
-                        return
+                        method: 'eth_requestAccounts'
                     })
+                        .catch(e => console.error(e.message))
+                        .then(res => {
+                            console.log("res = " + res)
+                            accounts = res
+                            updateButton()
+                        })
                 }
             }
         }
-
         updateButton()
         if (MetaMaskOnboarding.isMetaMaskInstalled()) {
             window.ethereum.on('accountsChanged', (newAccounts) => {
