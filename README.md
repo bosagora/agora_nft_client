@@ -6,7 +6,7 @@
 ```
 
 ## Public site at Github pages:
-https://bosagora.github.io/boa_space_static_website/
+https://bosagora.github.io/boa-space-static-website/
 
 ## Networks:
 ### `Agora Mainnet` : chainId `2151` (0x867)
