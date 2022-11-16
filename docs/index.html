@@ -88,68 +88,49 @@
         let signature
         let nonce
         let jwt
-        const fetchNonce = async () => {
-            console.log("BOA_SPACE_SERVER=" + window.BOA_SPACE_SERVER)
-            await fetch(window.BOA_SPACE_SERVER, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({query: `{ getNonce(address: "` + address + `") }`})
-            }).catch(e => {
-                console.error('fetchNonce:' + e.message)
-            })
-                .then(res => res.json())
-                .catch(e => console.error(e.message))
-                .then(res => {
-                    nonce = res.data.getNonce.toString()
-                    console.log('fetchNonce:' + nonce)
-                    nonceText.innerText = nonce
-                })
-        }
-        const signNonce = async () => {
+        const signNonce = async (nonce) => {
             const messageToSign = "BOA SPACE: proof of account ownership by signing personal one time use nonce of " + nonce
             console.log("messageToSign = " + messageToSign)
             const web3 = new Web3(window.ethereum)
             await web3.eth.personal.sign(messageToSign, address)
+                .catch(e => console.error('signNonce:' + e.message))
                 .then(sig => {
-                        console.log("Signature = " + sig)
-                        signature = sig
-                    }
-                )
+                    console.log("Signature = " + sig)
+                    signature = sig
+                })
         }
         const fetchJwt = async () => {
-            await signNonce()
-                .catch(e => console.error('fetchJwt:' + e.message))
-                .then(async () => {
-                    await fetch(window.BOA_SPACE_SERVER, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({query: `{ getJwt(address: "` + address + `", signature: "` + signature + `") }`})
-                    })
-                        .catch(e => console.error(e.message))
-                        .then(res => res.json())
-                        .catch(e => console.error(e.message))
-                        .then(res => {
-                            jwt = res.data.getJwt
-                            console.log('fetchJwt:' + jwt)
-                            jwtText.innerText = jwt
-                        })
+            try {
+                const response = await fetch(window.BOA_SPACE_SERVER, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query: `{ getJwt(address: "` + address + `", signature: "` + signature + `") }`})
                 })
+                const res = await response.json();
+                jwt = res.data.getJwt.toString();
+                jwtText.innerText = jwt
+            } catch (e) {
+                return e;
+            }
         }
 
         function enableLogin() {
             loginCard.hidden = false
             loginButton.onclick = async () => {
-                await fetchNonce()
-                    .catch(e => {
-                        console.error('enableLogin.fetchNonce:' + e.message)
-                        throw new Error('enableLogin.fetchNonce failed: ' + e.message)
+                console.log('loginButton.onclick')
+                await fetch(window.BOA_SPACE_SERVER, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query: `{ getNonce(address: "` + address + `") }`})
+                }).catch(e => console.error('fetchNonce:' + e.message))
+                    .then(res => res.json())
+                    .then(res => {
+                        nonce = res.data.getNonce.toString()
+                        console.log('loginButton.onclick: nonce = ' + nonce)
+                        nonceText.innerText = nonce
                     })
-                    .then(async () => {
-                        console.log('enableLogin.nonce:' + nonce)
-                        await fetchJwt()
-                            .catch(e => console.error('enableLogin.fetchJwt:' + e.message))
-                            .finally(() => console.log('enableLogin.fetchJwt:' + jwt))
-                    })
+                    .then(() => signNonce(nonce))
+                    .then(() => fetchJwt())
             }
         }
 
