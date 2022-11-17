@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -15,15 +15,15 @@
 <body>
 <main class="container-fluid">
     <header>
-        <h1 class="text-center">BOA SPACE: Agora NFT Marketplace Dapp</h1>
+        <h1 class="text-center">BOA SPACE: Agora NFT Marketplace DApp</h1>
     </header>
     <section>
         <div class="card" id="metamask_card">
-            <h4 class="card-header">
-                <form>
+            <form>
+                <h4 class="card-header">
                     <button id="metamask" type="button" class="btn btn-primary">Connect to Metamask</button>
-                </form>
-            </h4>
+                </h4>
+            </form>
             <div class="card-body">
                 <div class="row">
                     <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
@@ -93,8 +93,9 @@
         let nonce
         let jwt
         let url
+        let messageToSign
         const signNonce = async (nonce) => {
-            const messageToSign = "BOA SPACE: proof of account ownership by signing personal one time use nonce of " + nonce
+            messageToSign = "BOA SPACE: proof of account ownership by signing personal one time use nonce of " + nonce
             console.log("messageToSign = " + messageToSign)
             const web3 = new Web3(window.ethereum)
             await web3.eth.personal.sign(messageToSign, address)
@@ -109,7 +110,7 @@
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({query: `{ getJwt(address: "` + address + `", signature: "` + signature + `") }`})
+                    body: JSON.stringify({query: `{ getJwt(address: "` + address + `", message:"` + messageToSign +  `", signature: "` + signature + `") }`})
                 })
                 const res = await response.json();
                 jwt = res.data.getJwt.toString();
@@ -146,10 +147,10 @@
             })
                 .catch(e => console.error(e.message))
                 .then((chainId) => {
-                    chainText.innerText = chainId
-                    if (chainId == 2151) {
+                    chainText.innerText = chainId.toString()
+                    if (chainId === 2151) {
                         networkText.innerText = "Agora Mainnet"
-                    } else if (chainId == 2019) {
+                    } else if (chainId === 2019) {
                         networkText.innerText = "Agora Testnet"
                     } else {
                         networkText.innerText = "Unknown network"
