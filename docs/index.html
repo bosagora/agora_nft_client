@@ -145,10 +145,10 @@
                 .catch(e => console.error(e.message))
                 .then((chainId) => {
                     chainText.innerText = chainId.toString()
-                    if (chainId === 2151) {
-                        networkText.innerText = "Agora Mainnet"
-                    } else if (chainId === 2019) {
-                        networkText.innerText = "Agora Testnet"
+                    if (chainId === "0x867" ) {
+                        networkText.innerText = "Agora Mainnet (2151)"
+                    } else if (chainId === "0x7e3") {
+                        networkText.innerText = "Agora Testnet (2019)"
                     } else {
                         networkText.innerText = "Unknown network"
                     }
