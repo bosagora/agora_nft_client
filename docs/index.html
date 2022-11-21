@@ -45,10 +45,10 @@
                     <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
                         <form>
                             <div class="form-group">
-                                <label for="serverUrl">BOA-SPACE-SERVER URL:</label>
+                                <label for="serverUrl">BOA-SPACE-SERVER BASE URL:</label>
                                 <select class="form-control" id="serverUrl">
-                                    <option>http://localhost:4000/graphql</option>
-                                    <option>https://api.testnet.boaspace.io/graphql</option>
+                                    <option>http://localhost:4000</option>
+                                    <option>https://api.testnet.boaspace.io</option>
                                 </select>
                             </div>
                             <button id="login" type="button" class="btn btn-secondary">Login to BOA SPACE</button>
@@ -66,13 +66,17 @@
                         <p class="info-text alert-secondary">Jwt: <span id="jwt"></span></p>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                        <p class="info-text alert-secondary">My assets: <span id="assets"></span></p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 </main>
 
 <script>
-
     window.addEventListener('DOMContentLoaded', () => {
         const metamaskButton = document.getElementById('metamask')
         const loginButton = document.getElementById('login')
@@ -84,6 +88,7 @@
         const chainText = document.getElementById('chain')
         const nonceText = document.getElementById('nonce')
         const jwtText = document.getElementById('jwt')
+        const myAssetsText = document.getElementById('assets')
         let accounts
         let address
         let signature
@@ -104,14 +109,31 @@
         }
         const fetchJwt = async () => {
             try {
-                const response = await fetch(url, {
+                const response = await fetch(url + "/login", {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({query: `{ getJwt(address: "` + address + `", message:"` + messageToSign +  `", signature: "` + signature + `") }`})
+                    body: JSON.stringify({query: `{ getJwt(address: "` + address + `", message:"` + messageToSign + `", signature: "` + signature + `") }`})
                 })
                 const res = await response.json();
                 jwt = res.data.getJwt.toString();
                 jwtText.innerText = jwt
+            } catch (e) {
+                return e;
+            }
+        }
+        const getUserAssets = async () => {
+            try {
+                const response = await fetch(url + "/auth", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + jwt
+                    },
+                    body: JSON.stringify({query: `{ getMyAssets(address: "` + address + `"){ token_id } }`})
+                })
+                const res = await response.json();
+                const assets = res.data.getMyAssets.toString();
+                myAssetsText.innerText = assets.toString()
             } catch (e) {
                 return e;
             }
@@ -122,7 +144,7 @@
             loginButton.onclick = async () => {
                 console.log('loginButton.onclick')
                 url = serverSelect.options[serverSelect.selectedIndex].text
-                await fetch(url, {
+                await fetch(url + "/login", {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({query: `{ getNonce(address: "` + address + `") }`})
@@ -135,6 +157,7 @@
                     })
                     .then(() => signNonce(nonce))
                     .then(() => fetchJwt())
+                    .then(() => getUserAssets())
             }
         }
 
@@ -145,7 +168,7 @@
                 .catch(e => console.error(e.message))
                 .then((chainId) => {
                     chainText.innerText = chainId.toString()
-                    if (chainId === "0x867" ) {
+                    if (chainId === "0x867") {
                         networkText.innerText = "Agora Mainnet (2151)"
                     } else if (chainId === "0x7e3") {
                         networkText.innerText = "Agora Testnet (2019)"
@@ -154,7 +177,6 @@
                     }
                 })
         }
-
         const getCoinbase = async () => {
             await window.ethereum.request({
                 method: 'eth_coinbase'
