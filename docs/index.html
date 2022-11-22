@@ -47,8 +47,8 @@
                             <div class="form-group">
                                 <label for="serverUrl">BOA-SPACE-SERVER BASE URL:</label>
                                 <select class="form-control" id="serverUrl">
-                                    <option>http://localhost:4000</option>
-                                    <option>https://api.testnet.boaspace.io</option>
+                                    <option>http://localhost:4000/graphql</option>
+                                    <option>https://api.testnet.boaspace.io/graphql</option>
                                 </select>
                             </div>
                             <button id="login" type="button" class="btn btn-secondary">Login to BOA SPACE</button>
@@ -96,8 +96,6 @@
         let jwt
         let myAssets
         let url
-        let authUrl
-        let loginUrl
         let messageToSign
         const signNonce = async (nonce) => {
             messageToSign = "BOA SPACE: proof of account ownership by signing personal one time use nonce of " + nonce
@@ -112,9 +110,9 @@
         }
         const fetchJwt = async () => {
             try {
-                console.log("fetchJwt: calling", loginUrl, " for address", address, " message '" + messageToSign
+                console.log("fetchJwt: calling", url, " for address", address, " message '" + messageToSign
                     + "' and signature " + signature)
-                const response = await fetch(loginUrl, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({query: `{ getJwt(address: "` + address + `", message:"` + messageToSign + `", signature: "` + signature + `") }`})
@@ -128,10 +126,31 @@
                 return e;
             }
         }
+        const createUserAsset = async () => {
+            try {
+                console.log("createUserAsset: calling", url, " for address", address)
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + jwt
+                    },
+                    body: JSON.stringify({mutation: `{ createAsset(address: "` + address + `")` +
+                            `{ token_id, image_url, description, owner_address } }`})
+                })
+                const res = await response.json()
+                myAssets = JSON.stringify(res.data.getMyAssets, null, "  ")
+                console.log("assets =", myAssets)
+                myAssetsText.innerText = myAssets
+            } catch (e) {
+                console.error("getUserAssets error:" + e)
+                return e;
+            }
+        }
         const getUserAssets = async () => {
             try {
-                console.log("getUserAssets: calling", authUrl, " for address", address)
-                const response = await fetch(authUrl, {
+                console.log("getUserAssets: calling", url, " for address", address)
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -154,10 +173,8 @@
             loginCard.hidden = false
             loginButton.onclick = async () => {
                 url = serverSelect.options[serverSelect.selectedIndex].text
-                authUrl = url + "/auth"
-                loginUrl = url + "/login"
-                console.log("enableLogin: calling", loginUrl, " for address", address)
-                await fetch(loginUrl, {
+                console.log("enableLogin: calling", url, " for address", address)
+                await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({query: `{ getNonce(address: "` + address + `") }`})
