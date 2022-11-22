@@ -94,7 +94,10 @@
         let signature
         let nonce
         let jwt
+        let myAssets
         let url
+        let authUrl
+        let loginUrl
         let messageToSign
         const signNonce = async (nonce) => {
             messageToSign = "BOA SPACE: proof of account ownership by signing personal one time use nonce of " + nonce
@@ -109,7 +112,9 @@
         }
         const fetchJwt = async () => {
             try {
-                const response = await fetch(url + "/login", {
+                console.log("fetchJwt: calling", loginUrl, " for address", address, " message '" + messageToSign
+                    + "' and signature " + signature)
+                const response = await fetch(loginUrl, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({query: `{ getJwt(address: "` + address + `", message:"` + messageToSign + `", signature: "` + signature + `") }`})
@@ -117,24 +122,30 @@
                 const res = await response.json();
                 jwt = res.data.getJwt.toString();
                 jwtText.innerText = jwt
+                console.log("jwt = " + jwt)
             } catch (e) {
+                console.error("fetchJwt error:" + e)
                 return e;
             }
         }
         const getUserAssets = async () => {
             try {
-                const response = await fetch(url + "/auth", {
+                console.log("getUserAssets: calling", authUrl, " for address", address)
+                const response = await fetch(authUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + jwt
                     },
-                    body: JSON.stringify({query: `{ getMyAssets(address: "` + address + `"){ token_id } }`})
+                    body: JSON.stringify({query: `{ getMyAssets(address: "` + address + `")` +
+                        `{ token_id, image_url, description, owner_address } }`})
                 })
-                const res = await response.json();
-                const assets = res.data.getMyAssets.toString();
-                myAssetsText.innerText = assets.toString()
+                const res = await response.json()
+                myAssets = JSON.stringify(res.data.getMyAssets, null, "  ")
+                console.log("assets =", myAssets)
+                myAssetsText.innerText = myAssets
             } catch (e) {
+                console.error("getUserAssets error:" + e)
                 return e;
             }
         }
@@ -142,9 +153,11 @@
         function enableLogin() {
             loginCard.hidden = false
             loginButton.onclick = async () => {
-                console.log('loginButton.onclick')
                 url = serverSelect.options[serverSelect.selectedIndex].text
-                await fetch(url + "/login", {
+                authUrl = url + "/auth"
+                loginUrl = url + "/login"
+                console.log("enableLogin: calling", loginUrl, " for address", address)
+                await fetch(loginUrl, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({query: `{ getNonce(address: "` + address + `") }`})
