@@ -135,8 +135,13 @@
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + jwt
                     },
-                    body: JSON.stringify({mutation: `{ createAsset(address: "` + address + `")` +
-                            `{ token_id, image_url, description, owner_address } }`})
+                    body: JSON.stringify({"mutation": {
+                        "AssetInput": {
+                            "name":"aaa",
+                            "description": "bbb",
+                            "owner_address": address,
+                            "total_supply": 100
+                        }}})
                 })
                 const res = await response.json()
                 myAssets = JSON.stringify(res.data.getMyAssets, null, "  ")
@@ -156,11 +161,19 @@
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + jwt
                     },
-                    body: JSON.stringify({query: `{ getMyAssets(address: "` + address + `")` +
-                        `{ token_id, image_url, description, owner_address } }`})
+                    body: JSON.stringify({query: `{ getUserAssets(address: "` + address + `") {
+                        id
+                        name
+                        description
+                        image_url
+                        token_id
+                        owner_address
+                        asset_contract_address
+                        total_supply
+                     }}`})
                 })
                 const res = await response.json()
-                myAssets = JSON.stringify(res.data.getMyAssets, null, "  ")
+                myAssets = JSON.stringify(res.data.getUserAssets, null, "  ")
                 console.log("assets =", myAssets)
                 myAssetsText.innerText = myAssets
             } catch (e) {
