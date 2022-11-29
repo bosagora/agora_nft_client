@@ -73,210 +73,253 @@
                 </div>
             </div>
         </div>
+        <div class="card" id="create_asset_card">
+            <h4 class="card-header">Create an Asset</h4>
+            <div class="card-body">
+                <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                    <form enctype=”multipart/form-data”>
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" value="NFT_1">
+                        <label for="total">Total supply:</label>
+                        <input type="number" id="total" value=100><br><br>
+                        <label for="desc">Image:</label>
+                        <input type="text" id="desc" size="32" value="NFT description">
+                        <label for="file_upload">Desc:</label>
+                        <input type="file" id="file_upload" name="file_upload">
+                        <button id="create_asset" type="button" class="btn btn-secondary">Create Asset</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </section>
 </main>
 
 <script>
     window.addEventListener('DOMContentLoaded', () => {
-        const metamaskButton = document.getElementById('metamask')
-        const loginButton = document.getElementById('login')
-        const loginCard = document.getElementById('login_card')
-        const onboarding = new MetaMaskOnboarding()
-        const serverSelect = document.getElementById('serverUrl')
-        const accountText = document.getElementById('account')
-        const networkText = document.getElementById('network')
-        const chainText = document.getElementById('chain')
-        const nonceText = document.getElementById('nonce')
-        const jwtText = document.getElementById('jwt')
-        const myAssetsText = document.getElementById('assets')
-        let accounts
-        let address
-        let signature
-        let nonce
-        let jwt
-        let myAssets
-        let url
-        let messageToSign
-        const signNonce = async (nonce) => {
-            messageToSign = "BOA SPACE: proof of account ownership by signing personal one time use nonce of " + nonce
-            console.log("messageToSign = " + messageToSign)
-            const web3 = new Web3(window.ethereum)
-            await web3.eth.personal.sign(messageToSign, address)
-                .catch(e => console.error('signNonce:' + e.message))
-                .then(sig => {
-                    console.log("Signature = " + sig)
-                    signature = sig
-                })
-        }
-        const fetchJwt = async () => {
-            try {
-                console.log("fetchJwt: calling", url, " for address", address, " message '" + messageToSign
-                    + "' and signature " + signature)
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({query: `{ getJwt(address: "` + address + `", message:"` + messageToSign + `", signature: "` + signature + `") }`})
-                })
-                const res = await response.json();
-                jwt = res.data.getJwt.toString();
-                jwtText.innerText = jwt
-                console.log("jwt = " + jwt)
-            } catch (e) {
-                console.error("fetchJwt error:" + e)
-                return e;
-            }
-        }
-        const createUserAsset = async () => {
-            try {
-                console.log("createUserAsset: calling", url, " for address", address)
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + jwt
-                    },
-                    body: JSON.stringify({"mutation": {
-                        "AssetInput": {
-                            "name":"aaa",
-                            "description": "bbb",
-                            "owner_address": address,
-                            "total_supply": 100
-                        }}})
-                })
-                const res = await response.json()
-                myAssets = JSON.stringify(res.data.getMyAssets, null, "  ")
-                console.log("assets =", myAssets)
-                myAssetsText.innerText = myAssets
-            } catch (e) {
-                console.error("getUserAssets error:" + e)
-                return e;
-            }
-        }
-        const getUserAssets = async () => {
-            try {
-                console.log("getUserAssets: calling", url, " for address", address)
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + jwt
-                    },
-                    body: JSON.stringify({query: `{ getUserAssets(address: "` + address + `") {
-                        id
-                        name
-                        description
-                        image_url
-                        token_id
-                        owner_address
-                        asset_contract_address
-                        total_supply
-                     }}`})
-                })
-                const res = await response.json()
-                myAssets = JSON.stringify(res.data.getUserAssets, null, "  ")
-                console.log("assets =", myAssets)
-                myAssetsText.innerText = myAssets
-            } catch (e) {
-                console.error("getUserAssets error:" + e)
-                return e;
-            }
-        }
-
-        function enableLogin() {
-            loginCard.hidden = false
-            loginButton.onclick = async () => {
-                url = serverSelect.options[serverSelect.selectedIndex].text
-                console.log("enableLogin: calling", url, " for address", address)
-                await fetch(url, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({query: `{ getNonce(address: "` + address + `") }`})
-                }).catch(e => console.error('fetchNonce:' + e.message))
-                    .then(res => res.json())
-                    .then(res => {
-                        nonce = res.data.getNonce.toString()
-                        console.log('loginButton.onclick: nonce = ' + nonce)
-                        nonceText.innerText = nonce
+            const metamaskButton = document.getElementById('metamask')
+            const loginButton = document.getElementById('login')
+            const loginCard = document.getElementById('login_card')
+            const onboarding = new MetaMaskOnboarding()
+            const serverSelect = document.getElementById('serverUrl')
+            const accountText = document.getElementById('account')
+            const networkText = document.getElementById('network')
+            const chainText = document.getElementById('chain')
+            const nonceText = document.getElementById('nonce')
+            const jwtText = document.getElementById('jwt')
+            const myAssetsText = document.getElementById('assets')
+            const createAssetCard = document.getElementById('create_asset_card')
+            const nameText = document.getElementById('name')
+            const descText = document.getElementById('desc')
+            const totalNumber = document.getElementById('total')
+            const fileUpload = document.getElementById('file_upload')
+            const createAssetButton= document.getElementById('create_asset')
+            let accounts
+            let address
+            let signature
+            let nonce
+            let jwt
+            let myAssets
+            let url
+            let messageToSign
+            const signNonce = async (nonce) => {
+                messageToSign = "BOA SPACE: proof of account ownership by signing personal one time use nonce of " + nonce
+                console.log("messageToSign = " + messageToSign)
+                const web3 = new Web3(window.ethereum)
+                await web3.eth.personal.sign(messageToSign, address)
+                    .catch(e => console.error('signNonce:' + e.message))
+                    .then(sig => {
+                        console.log("Signature = " + sig)
+                        signature = sig
                     })
-                    .then(() => signNonce(nonce))
-                    .then(() => fetchJwt())
-                    .then(() => getUserAssets())
             }
-        }
-
-        const updateChainIdText = async () => {
-            await window.ethereum.request({
-                method: 'eth_chainId'
-            })
-                .catch(e => console.error(e.message))
-                .then((chainId) => {
-                    chainText.innerText = chainId.toString()
-                    if (chainId === "0x867") {
-                        networkText.innerText = "Agora Mainnet (2151)"
-                    } else if (chainId === "0x7e3") {
-                        networkText.innerText = "Agora Testnet (2019)"
-                    } else {
-                        networkText.innerText = "Unknown network"
-                    }
-                })
-        }
-        const getCoinbase = async () => {
-            await window.ethereum.request({
-                method: 'eth_coinbase'
-            })
-                .catch(e => console.error(e.message))
-                .then(coinbase => {
-                    console.log("coinbase = " + coinbase)
-                    address = coinbase
-                    console.log("address = " + address)
-                    accountText.innerText = address
-                })
-        }
-
-        function updateButton() {
-            loginCard.hidden = true
-            if (!MetaMaskOnboarding.isMetaMaskInstalled()) {
-                metamaskButton.innerText = 'Click here to install MetaMask!'
-                metamaskButton.onclick = () => {
-                    metamaskButton.innerText = 'Onboarding in progress'
-                    metamaskButton.disabled = true
-                    onboarding.startOnboarding()
+            const fetchJwt = async () => {
+                try {
+                    console.log("fetchJwt: calling", url, " for address", address, " message '" + messageToSign
+                        + "' and signature " + signature)
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({query: `{ getJwt(address: "` + address + `", message:"` + messageToSign + `", signature: "` + signature + `") }`})
+                    })
+                    const res = await response.json();
+                    jwt = res.data.getJwt.toString();
+                    jwtText.innerText = jwt
+                    console.log("jwt = " + jwt)
+                } catch (e) {
+                    console.error("fetchJwt error:" + e)
+                    return e;
                 }
-            } else if (accounts && accounts.length > 0) {
-                metamaskButton.innerText = 'Connected to Metamask'
-                metamaskButton.disabled = true
-                onboarding.stopOnboarding()
-                getCoinbase()
-                updateChainIdText()
-                enableLogin()
-            } else {
-                metamaskButton.innerText = 'Connect to Metamask'
-                metamaskButton.onclick = async () => {
-                    await window.ethereum.request({
-                        method: 'eth_requestAccounts'
-                    })
-                        .catch(e => console.error(e.message))
-                        .then(res => {
-                            console.log("res = " + res)
-                            accounts = res
-                            updateButton()
+            }
+
+            const getUserAssets = async () => {
+                try {
+                    console.log("getUserAssets: calling", url, " for address", address)
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + jwt
+                        },
+                        body: JSON.stringify({
+                            query: `{ getUserAssets(address: "${address}") { id name description image_url token_id owner_address asset_contract_address total_supply } }`
                         })
+                    })
+                    const res = await response.json()
+                    myAssets = JSON.stringify(res.data.getUserAssets, null, "  ")
+                    console.log("assets =", myAssets)
+                    myAssetsText.innerText = myAssets
+                } catch (e) {
+                    console.error("getUserAssets error:" + e)
+                    return e;
                 }
             }
-        }
 
-        updateButton()
-        if (MetaMaskOnboarding.isMetaMaskInstalled()) {
-            window.ethereum.on('accountsChanged', (newAccounts) => {
-                accounts = newAccounts
-                updateButton()
-            })
-            window.ethereum.on('chainChanged', (chainId) => {
-                alert("Reload due to chainId change to " + chainId)
-                window.location.reload()
-            })
+            function enableCreateAsset() {
+                createAssetCard.hidden = false
+                createAssetButton.onclick = async () => {
+                    try {
+                        console.log("createUserAsset: calling", url, " for address", address)
+                        const formData = new FormData()
+                        formData.append("operations", JSON.stringify({
+                            operationName: "AddAsset",
+                            query:
+                                `mutation AddAsset($asset: AssetInput!) { addAsset(asset: $asset) { asset { id } } }`,
+                            variables: {
+                                asset: {
+                                    name: nameText.value,
+                                    description: descText.value,
+                                    owner_address: address,
+                                    total_supply: parseInt(totalNumber.value),
+                                    file: null
+                                }
+                            }
+                        }))
+                        formData.append("map", JSON.stringify({
+                            "1": ["variables.file"]
+                        }))
+                        formData.append("1", fileUpload.files[0])
+                        const filename = fileUpload.files[0].name
+                        console.log("fileUpload:", filename)
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                // 'Content-Type': 'multipart/form-data;',
+                                'x-apollo-operation-name': 'addAssetOp',
+                                'Authorization': 'Bearer ' + jwt
+                            }
+                        })
+                        const res = await response.json()
+                        console.log("addAsset response =", JSON.stringify(res.data.addAsset))
+                        const newAsset = JSON.stringify(res.data.addAsset.asset, null, "  ")
+                        console.log(JSON.stringify(newAsset))
+                    }
+                    catch(e)
+                    {
+                        console.error("enableCreateAsset error:" + e)
+                        return e;
+                    }
+                }
+            }
+
+            function enableLogin() {
+                loginCard.hidden = false
+                loginButton.onclick = async () => {
+                    url = serverSelect.options[serverSelect.selectedIndex].text
+                    console.log("enableLogin: calling", url, " for address", address)
+                    await fetch(url, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({query: `{ getNonce(address: "${address}") }`})
+                    }).catch(e => console.error('fetchNonce:' + e.message))
+                        .then(res => res.json())
+                        .then(res => {
+                            nonce = res.data.getNonce.toString()
+                            console.log('loginButton.onclick: nonce = ' + nonce)
+                            nonceText.innerText = nonce
+                        })
+                        .then(() => signNonce(nonce))
+                        .then(() => fetchJwt())
+                        .then(() => getUserAssets())
+                        .then(() => enableCreateAsset())
+                }
+            }
+
+            const updateChainIdText = async () => {
+                await window.ethereum.request({
+                    method: 'eth_chainId'
+                })
+                    .catch(e => console.error(e.message))
+                    .then((chainId) => {
+                        chainText.innerText = chainId.toString()
+                        if (chainId === "0x867") {
+                            networkText.innerText = "Agora Mainnet (2151)"
+                        } else if (chainId === "0x7e3") {
+                            networkText.innerText = "Agora Testnet (2019)"
+                        } else {
+                            networkText.innerText = "Unknown network"
+                        }
+                    })
+            }
+            const getCoinbase = async () => {
+                await window.ethereum.request({
+                    method: 'eth_coinbase'
+                })
+                    .catch(e => console.error(e.message))
+                    .then(coinbase => {
+                        console.log("coinbase = " + coinbase)
+                        address = coinbase
+                        console.log("address = " + address)
+                        accountText.innerText = address
+                    })
+            }
+
+            function updateButton() {
+                loginCard.hidden = true
+                createAssetCard.hidden = true
+                if (!MetaMaskOnboarding.isMetaMaskInstalled()) {
+                    metamaskButton.innerText = 'Click here to install MetaMask!'
+                    metamaskButton.onclick = () => {
+                        metamaskButton.innerText = 'Onboarding in progress'
+                        metamaskButton.disabled = true
+                        onboarding.startOnboarding()
+                    }
+                } else if (accounts && accounts.length > 0) {
+                    metamaskButton.innerText = 'Connected to Metamask'
+                    metamaskButton.disabled = true
+                    onboarding.stopOnboarding()
+                    getCoinbase()
+                    updateChainIdText()
+                    enableLogin()
+                } else {
+                    metamaskButton.innerText = 'Connect to Metamask'
+                    metamaskButton.onclick = async () => {
+                        await window.ethereum.request({
+                            method: 'eth_requestAccounts'
+                        })
+                            .catch(e => console.error(e.message))
+                            .then(res => {
+                                console.log("res = " + res)
+                                accounts = res
+                                updateButton()
+                            })
+                    }
+                }
+            }
+
+            updateButton()
+            if (MetaMaskOnboarding.isMetaMaskInstalled()) {
+                window.ethereum.on('accountsChanged', (newAccounts) => {
+                    accounts = newAccounts
+                    updateButton()
+                })
+                window.ethereum.on('chainChanged', (chainId) => {
+                    alert("Reload due to chainId change to " + chainId)
+                    window.location.reload()
+                })
+            }
         }
-    })
+    )
 </script>
 </body>
 
