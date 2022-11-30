@@ -209,7 +209,7 @@
                             method: 'POST',
                             body: formData,
                             headers: {
-                                'x-apollo-operation-name': 'addAssetOp',
+                                'Apollo-Require-Preflight': 'true',
                                 'Authorization': 'Bearer ' + jwt
                             }
                         })
