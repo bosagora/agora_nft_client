@@ -19,21 +19,21 @@
     </header>
     <section>
         <div class="card" id="metamask_card">
-            <form>
-                <h4 class="card-header">
-                    <button id="metamask" type="button" class="btn btn-primary">Connect to Metamask</button>
-                </h4>
-            </form>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                    <div class="col">
+                        <form>
+                            <button id="metamask" type="button" class="btn btn-primary">Connect to Metamask</button>
+                        </form>
+                    </div>
+                    <div class="col">
                         <p class="info-text alert-secondary">Network: <span id="network"
                                                                             class="info-text alert-primary"></span></p>
                     </div>
-                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                    <div class="col">
                         <p class="info-text alert-secondary">ChainId: <span id="chain"></span></p>
                     </div>
-                    <div class="col-xl-8 col-lg-12 col-md-24 col-sm-24 col-24">
+                    <div class="col-6">
                         <p class="info-text alert-secondary">Account: <span id="account"></span></p>
                     </div>
                 </div>
@@ -42,7 +42,7 @@
         <div class="card" id="login_card">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                    <div class="col">
                         <form>
                             <div class="form-group">
                                 <label for="serverUrl">BOA-SPACE-SERVER BASE URL:</label>
@@ -54,21 +54,13 @@
                             <button id="login" type="button" class="btn btn-secondary">Login to BOA SPACE</button>
                         </form>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                    <div class="col">
                         <p class="info-text alert-secondary">Nonce: <span id="nonce"
-                                                                          class="info-text alert-primary"></span></p>
+                                                                          class="info-text alert-primary"></span>
+                        </p>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                    <div class="col-6">
                         <p class="info-text alert-secondary">Jwt: <span id="jwt"></span></p>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
-                        <p class="info-text alert-secondary">My assets: <span id="assets"></span></p>
                     </div>
                 </div>
             </div>
@@ -76,7 +68,7 @@
         <div class="card" id="create_asset_card">
             <h4 class="card-header">Create an Asset</h4>
             <div class="card-body">
-                <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12 col-12">
+                <div class="row">
                     <form enctype=”multipart/form-data”>
                         <label for="name">Name:</label>
                         <input type="text" id="name" value="NFT_1">
@@ -85,9 +77,12 @@
                         <label for="desc">Image:</label>
                         <input type="text" id="desc" size="32" value="NFT description">
                         <label for="file_upload">Desc:</label>
-                        <input type="file" id="file_upload" name="file_upload">
+                        <input type="file" id="file_upload" name="image_file">
                         <button id="create_asset" type="button" class="btn btn-secondary">Create Asset</button>
                     </form>
+                </div>
+                <div class="row">
+                    <p class="info-text alert-secondary">Stored asset: <span id="new_asset"></span></p>
                 </div>
             </div>
         </div>
@@ -106,19 +101,18 @@
             const chainText = document.getElementById('chain')
             const nonceText = document.getElementById('nonce')
             const jwtText = document.getElementById('jwt')
-            const myAssetsText = document.getElementById('assets')
+            const newAssetText = document.getElementById('new_asset')
             const createAssetCard = document.getElementById('create_asset_card')
             const nameText = document.getElementById('name')
             const descText = document.getElementById('desc')
             const totalNumber = document.getElementById('total')
             const fileUpload = document.getElementById('file_upload')
-            const createAssetButton= document.getElementById('create_asset')
+            const createAssetButton = document.getElementById('create_asset')
             let accounts
             let address
             let signature
             let nonce
             let jwt
-            let myAssets
             let url
             let messageToSign
             const signNonce = async (nonce) => {
@@ -151,28 +145,28 @@
                 }
             }
 
-            const getUserAssets = async () => {
-                try {
-                    console.log("getUserAssets: calling", url, " for address", address)
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + jwt
-                        },
-                        body: JSON.stringify({
-                            query: `{ getUserAssets(address: "${address}") { id name description image_url token_id owner_address asset_contract_address total_supply } }`
-                        })
-                    })
-                    const res = await response.json()
-                    myAssets = JSON.stringify(res.data.getUserAssets, null, "  ")
-                    console.log("assets =", myAssets)
-                    myAssetsText.innerText = myAssets
-                } catch (e) {
-                    console.error("getUserAssets error:" + e)
-                    return e;
-                }
-            }
+            // const getUserAssets = async () => {
+            //     try {
+            //         console.log("getUserAssets: calling", url, " for address", address)
+            //         const response = await fetch(url, {
+            //             method: 'POST',
+            //             headers: {
+            //                 'Content-Type': 'application/json',
+            //                 'Authorization': 'Bearer ' + jwt
+            //             },
+            //             body: JSON.stringify({
+            //                 query: `{ getUserAssets(address: "${address}") { id name description image_url token_id owner_address asset_contract_address total_supply } }`
+            //             })
+            //         })
+            //         const res = await response.json()
+            //         myAssets = JSON.stringify(res.data.getUserAssets, null, "  ")
+            //         console.log("assets =", myAssets)
+            //         myAssetsText.innerText = myAssets
+            //     } catch (e) {
+            //         console.error("getUserAssets error:" + e)
+            //         return e;
+            //     }
+            // }
 
             function enableCreateAsset() {
                 createAssetCard.hidden = false
@@ -181,30 +175,40 @@
                         console.log("createUserAsset: calling", url, " for address", address)
                         const formData = new FormData()
                         formData.append("operations", JSON.stringify({
-                            operationName: "AddAsset",
-                            query:
-                                `mutation AddAsset($asset: AssetInput!) { addAsset(asset: $asset) { asset { id } } }`,
+                            operationName: "addAsset",
                             variables: {
-                                asset: {
-                                    name: nameText.value,
-                                    description: descText.value,
-                                    owner_address: address,
-                                    total_supply: parseInt(totalNumber.value),
-                                    file: null
-                                }
-                            }
+                                name: nameText.value,
+                                description: descText.value,
+                                owner_address: address,
+                                total_supply: parseInt(totalNumber.value),
+                            },
+                            query:
+                                `mutation addAsset(
+                                    $image_file: Upload!,
+                                    $name: String!,
+                                    $description: String!,
+                                    $owner_address: String!,
+                                    $total_supply: Int!)
+                                { addAsset(
+                                    image_file: $image_file,
+                                    name: $name,
+                                    description: $description,
+                                    owner_address: $owner_address,
+                                    total_supply: $total_supply) {
+                                success
+                                message
+                                asset { id name description image_url token_id owner_address asset_contract_address total_supply } } }`
                         }))
                         formData.append("map", JSON.stringify({
-                            "1": ["variables.file"]
+                            "image_file": ["variables.image_file"]
                         }))
-                        formData.append("1", fileUpload.files[0])
-                        const filename = fileUpload.files[0].name
-                        console.log("fileUpload:", filename)
+                        formData.append("image_file", fileUpload.files[0])
+                        const filename = fileUpload.files[0]
+                        console.log("image_file:", filename)
                         const response = await fetch(url, {
                             method: 'POST',
                             body: formData,
                             headers: {
-                                // 'Content-Type': 'multipart/form-data;',
                                 'x-apollo-operation-name': 'addAssetOp',
                                 'Authorization': 'Bearer ' + jwt
                             }
@@ -213,9 +217,8 @@
                         console.log("addAsset response =", JSON.stringify(res.data.addAsset))
                         const newAsset = JSON.stringify(res.data.addAsset.asset, null, "  ")
                         console.log(JSON.stringify(newAsset))
-                    }
-                    catch(e)
-                    {
+                        newAssetText.innerText = newAsset
+                    } catch (e) {
                         console.error("enableCreateAsset error:" + e)
                         return e;
                     }
@@ -240,7 +243,6 @@
                         })
                         .then(() => signNonce(nonce))
                         .then(() => fetchJwt())
-                        .then(() => getUserAssets())
                         .then(() => enableCreateAsset())
                 }
             }
