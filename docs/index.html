@@ -65,6 +65,26 @@
                 </div>
             </div>
         </div>
+        <div class="card" id="import_nft_card">
+            <h4 class="card-header">Import NFT</h4>
+            <div class="card-body">
+                <div class="row">
+                    <form>
+                        <label for="token_id">Token id:</label>
+                        <input type="text" id="token_id" size="120"
+                               value="89697278701889901864060606526707955834850344146599935406839114475468283183154"><br><br>
+                        <label for="asset_contract_shared_address">Asset Contract:</label>
+                        <input type="text" id="asset_contract_shared_address" size="120"
+                               value="0x2fddd0f488B767E8Dd42aE4E60f0685A2e15b1Fd">
+                        <button id="import_nft_btn" type="button" class="btn btn-secondary">Import NFT</button>
+                    </form>
+                </div>
+                <div class="row">
+                    <p class="info-text alert-secondary">Imported asset: <span id="imported_nft"></span></p>
+                </div>
+            </div>
+        </div>
+        </div>
         <div class="card" id="create_asset_card">
             <h4 class="card-header">Create an Asset</h4>
             <div class="card-body">
@@ -108,6 +128,11 @@
             const totalNumber = document.getElementById('total')
             const fileUpload = document.getElementById('file_upload')
             const createAssetButton = document.getElementById('create_asset')
+            const importNftCard = document.getElementById('import_nft_card')
+            const tokenIdText = document.getElementById('token_id')
+            const assetContractSharedAddressText = document.getElementById('asset_contract_shared_address')
+            const importedNftText = document.getElementById('imported_nft')
+            const importNftButton = document.getElementById('import_nft_btn')
             let accounts
             let address
             let signature
@@ -144,29 +169,6 @@
                     return e;
                 }
             }
-
-            // const getUserAssets = async () => {
-            //     try {
-            //         console.log("getUserAssets: calling", url, " for address", address)
-            //         const response = await fetch(url, {
-            //             method: 'POST',
-            //             headers: {
-            //                 'Content-Type': 'application/json',
-            //                 'Authorization': 'Bearer ' + jwt
-            //             },
-            //             body: JSON.stringify({
-            //                 query: `{ getUserAssets(address: "${address}") { id name description image_url token_id owner_address asset_contract_address total_supply } }`
-            //             })
-            //         })
-            //         const res = await response.json()
-            //         myAssets = JSON.stringify(res.data.getUserAssets, null, "  ")
-            //         console.log("assets =", myAssets)
-            //         myAssetsText.innerText = myAssets
-            //     } catch (e) {
-            //         console.error("getUserAssets error:" + e)
-            //         return e;
-            //     }
-            // }
 
             function enableCreateAsset() {
                 createAssetCard.hidden = false
@@ -225,6 +227,47 @@
                 }
             }
 
+            function enableImportNFT() {
+                importNftCard.hidden = false
+                importNftButton.onclick = async () => {
+                    try {
+                        console.log("enableImportNFT: calling", url, " for address", address)
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                operationName: "importNft",
+                                variables: {
+                                    token_id: tokenIdText.value,
+                                    contract: assetContractSharedAddressText.value,
+                                },
+                                query:
+                                    `mutation importNft(
+                                    $token_id: String!,
+                                    $contract: String!)
+                                { importNft(
+                                    token_id: $token_id,
+                                    contract: $contract) {
+                                success
+                                message
+                                asset { id name description image_url token_id owner_address asset_contract_address total_supply } } }`
+                            }),
+
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Apollo-Require-Preflight': 'true',
+                                'Authorization': 'Bearer ' + jwt
+                            }
+                        })
+                        const res = await response.json();
+                        importedNftText.innerText = JSON.stringify(res.data.importNft, null, " ")
+                        console.log("imported nft = " + importedNftText.innerText)
+                    } catch (e) {
+                        console.error("import NFT error:" + e)
+                        return e;
+                    }
+                }
+            }
+
             function enableLogin() {
                 loginCard.hidden = false
                 loginButton.onclick = async () => {
@@ -243,6 +286,7 @@
                         })
                         .then(() => signNonce(nonce))
                         .then(() => fetchJwt())
+                        .then(() => enableImportNFT())
                         .then(() => enableCreateAsset())
                 }
             }
@@ -279,6 +323,7 @@
             function updateButton() {
                 loginCard.hidden = true
                 createAssetCard.hidden = true
+                importNftCard.hidden = true
                 if (!MetaMaskOnboarding.isMetaMaskInstalled()) {
                     metamaskButton.innerText = 'Click here to install MetaMask!'
                     metamaskButton.onclick = () => {
