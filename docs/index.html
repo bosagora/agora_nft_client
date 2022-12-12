@@ -197,9 +197,11 @@
                                     description: $description,
                                     owner_address: $owner_address,
                                     total_supply: $total_supply) {
-                                success
-                                message
-                                asset { id name description image_url token_id owner_address asset_contract_address total_supply } } }`
+                                        success
+                                        message
+                                        assets { token_id name description image_url total_supply }
+                                    }
+                                 }`
                         }))
                         formData.append("map", JSON.stringify({
                             "image_file": ["variables.image_file"]
@@ -217,9 +219,9 @@
                         })
                         const res = await response.json()
                         console.log("addAsset response =", JSON.stringify(res.data.addAsset))
-                        const newAsset = JSON.stringify(res.data.addAsset.asset, null, "  ")
-                        console.log(JSON.stringify(newAsset))
-                        newAssetText.innerText = newAsset
+                        const newAssetResponse = JSON.stringify(res.data.addAsset, null, "  ")
+                        console.log(newAssetResponse)
+                        newAssetText.innerText = newAssetResponse
                     } catch (e) {
                         console.error("enableCreateAsset error:" + e)
                         return e;
@@ -247,9 +249,11 @@
                                 { importNft(
                                     token_id: $token_id,
                                     contract: $contract) {
-                                success
-                                message
-                                asset { id name description image_url token_id owner_address asset_contract_address total_supply } } }`
+                                        success
+                                        message
+                                        assets { token_id name description image_url total_supply }
+                                    }
+                                }`
                             }),
 
                             headers: {
