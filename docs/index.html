@@ -199,7 +199,12 @@
                                     total_supply: $total_supply) {
                                         success
                                         message
-                                        assets { token_id name description image_url total_supply }
+                                        assets {
+                                            token_id
+                                            name
+                                            description
+                                            image_url
+                                            total_supply }
                                     }
                                  }`
                         }))
@@ -251,7 +256,15 @@
                                     contract: $contract) {
                                         success
                                         message
-                                        assets { token_id name description image_url total_supply }
+                                        assets {
+                                            token_id name
+                                            description image_url thumbnail_url preview_url
+                                            total_supply
+                                            owners {
+                                                account { address user }
+                                                quantity
+                                            }
+                                        }
                                     }
                                 }`
                             }),
