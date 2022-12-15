@@ -257,13 +257,23 @@
                                     contract: $contract) {
                                         success
                                         message
-                                        asset {
-                                            token_id name
-                                            description image_url thumbnail_url preview_url
-                                            total_supply
-                                            owners {
-                                                account { address user }
-                                                quantity
+                                        assetWithOwners {
+                                            asset {
+                                                contract {
+                                                    contract_type {
+                                                        name
+                                                    }
+                                                    address
+                                                    name
+                                                    description
+                                                }
+                                                token_id
+                                                name
+                                                description
+                                                image_url
+                                                preview_url
+                                                thumbnail_url
+                                                total_supply
                                             }
                                         }
                                     }
@@ -278,7 +288,7 @@
                         })
                         const res = await response.json()
                         console.log(JSON.stringify(res))
-                        importedNftText.innerText = JSON.stringify(res.data.importNft.asset, null, " ")
+                        importedNftText.innerText = JSON.stringify(res.data.importNft.assetWithOwners, null, " ")
                         console.log("imported nft = " + importedNftText.innerText)
                     } catch (e) {
                         console.error("import NFT error:" + e)
