@@ -158,10 +158,11 @@
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({query: `{ getJwt(address: "` + address + `", message:"` + messageToSign + `", signature: "` + signature + `") }`})
+                        body: JSON.stringify({query: `{ getJwt(address: "` + address + `", message:"` + messageToSign + `", signature: "` + signature + `") { jwt success message } }`})
                     })
-                    const res = await response.json();
-                    jwt = res.data.getJwt.toString();
+                    const res = await response.json()
+                    console.log(JSON.stringify(res))
+                    jwt = res.data.getJwt.jwt.toString();
                     jwtText.innerText = jwt
                     console.log("jwt = " + jwt)
                 } catch (e) {
@@ -199,7 +200,7 @@
                                     total_supply: $total_supply) {
                                         success
                                         message
-                                        assets {
+                                        asset {
                                             token_id
                                             name
                                             description
@@ -256,7 +257,7 @@
                                     contract: $contract) {
                                         success
                                         message
-                                        assets {
+                                        asset {
                                             token_id name
                                             description image_url thumbnail_url preview_url
                                             total_supply
@@ -275,8 +276,9 @@
                                 'Authorization': 'Bearer ' + jwt
                             }
                         })
-                        const res = await response.json();
-                        importedNftText.innerText = JSON.stringify(res.data.importNft, null, " ")
+                        const res = await response.json()
+                        console.log(JSON.stringify(res))
+                        importedNftText.innerText = JSON.stringify(res.data.importNft.asset, null, " ")
                         console.log("imported nft = " + importedNftText.innerText)
                     } catch (e) {
                         console.error("import NFT error:" + e)
@@ -293,11 +295,12 @@
                     await fetch(url, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({query: `{ getNonce(address: "${address}") }`})
+                        body: JSON.stringify({query: `{ getNonce(address: "${address}") { success nonce message } }`})
                     }).catch(e => console.error('fetchNonce:' + e.message))
                         .then(res => res.json())
                         .then(res => {
-                            nonce = res.data.getNonce.toString()
+                            console.log(JSON.stringify(res))
+                            nonce = res.data.getNonce.nonce.toString()
                             console.log('loginButton.onclick: nonce = ' + nonce)
                             nonceText.innerText = nonce
                         })
