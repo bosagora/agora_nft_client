@@ -239,6 +239,7 @@
                 importNftCard.hidden = false
                 importNftButton.onclick = async () => {
                     try {
+                        importedNftText.innerText = ""
                         console.log("enableImportNFT: calling", url, " for address", address)
                         const response = await fetch(url, {
                             method: 'POST',
@@ -294,7 +295,7 @@
                         })
                         const res = await response.json()
                         console.log(JSON.stringify(res))
-                        importedNftText.innerText = JSON.stringify(res.data.importNft.assetWithOwners, null, " ")
+                        importedNftText.innerText = JSON.stringify(res.data.importNft, null, "--")
                         console.log("imported nft = " + importedNftText.innerText)
                     } catch (e) {
                         console.error("import NFT error:" + e)
@@ -323,7 +324,7 @@
                         .then(() => signNonce(nonce))
                         .then(() => fetchJwt())
                         .then(() => enableImportNFT())
-                        .then(() => enableCreateAsset())
+                        // .then(() => enableCreateAsset())
                 }
             }
 
