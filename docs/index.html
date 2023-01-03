@@ -72,8 +72,8 @@
             <div class="card-body">
                 <div class="row">
                     <form>
-                        <label for="token_id">Token id:</label>
-                        <input type="text" id="token_id" size="120"
+                        <label for="tokenId">Token id:</label>
+                        <input type="text" id="tokenId" size="120"
                                value="89697278701889901864060606526707955834850344146599935406839114475468283183154"><br><br>
                         <label for="asset_contract_shared_address">Asset Contract:</label>
                         <input type="text" id="asset_contract_shared_address" size="120"
@@ -131,7 +131,7 @@
             const fileUpload = document.getElementById('file_upload')
             const createAssetButton = document.getElementById('create_asset')
             const importNftCard = document.getElementById('import_nft_card')
-            const tokenIdText = document.getElementById('token_id')
+            const tokenIdText = document.getElementById('tokenId')
             const assetContractSharedAddressText = document.getElementById('asset_contract_shared_address')
             const importedNftText = document.getElementById('imported_nft')
             const importNftButton = document.getElementById('import_nft_btn')
@@ -180,34 +180,34 @@
                         console.log("createUserAsset: calling", url, " for address", address)
                         const formData = new FormData()
                         formData.append("operations", JSON.stringify({
-                            operationName: "addAsset",
+                            operationName: "createItem",
                             variables: {
                                 name: nameText.value,
                                 description: descText.value,
                                 owner_address: address,
-                                total_supply: parseInt(totalNumber.value),
+                                totalSupply: parseInt(totalNumber.value),
                             },
                             query:
-                                `mutation addAsset(
+                                `mutation createItem(
                                     $image_file: Upload!,
                                     $name: String!,
                                     $description: String!,
                                     $owner_address: String!,
-                                    $total_supply: Int!)
-                                { addAsset(
+                                    $totalSupply: Int!)
+                                { createItem(
                                     image_file: $image_file,
                                     name: $name,
                                     description: $description,
                                     owner_address: $owner_address,
-                                    total_supply: $total_supply) {
+                                    totalSupply: $totalSupply) {
                                         success
                                         message
                                         asset {
-                                            token_id
+                                            tokenId
                                             name
                                             description
-                                            image_url
-                                            total_supply }
+                                            imageUrl
+                                            totalSupply }
                                     }
                                  }`
                         }))
@@ -226,8 +226,8 @@
                             }
                         })
                         const res = await response.json()
-                        console.log("addAsset response =", JSON.stringify(res.data.addAsset))
-                        const newAssetResponse = JSON.stringify(res.data.addAsset, null, "  ")
+                        console.log("createItem response =", JSON.stringify(res.data.createItem))
+                        const newAssetResponse = JSON.stringify(res.data.createItem, null, "  ")
                         console.log(newAssetResponse)
                         newAssetText.innerText = newAssetResponse
                     } catch (e) {
@@ -248,37 +248,37 @@
                             body: JSON.stringify({
                                 operationName: "importNft",
                                 variables: {
-                                    token_id: tokenIdText.value,
+                                    tokenId: tokenIdText.value,
                                     contract: assetContractSharedAddressText.value,
                                 },
                                 query:
                                     `mutation importNft(
-                                    $token_id: String!,
+                                    $tokenId: String!,
                                     $contract: String!)
                                 { importNft(
-                                    token_id: $token_id,
+                                    tokenId: $tokenId,
                                     contract: $contract) {
                                         success
                                         message
                                         assetWithOwners {
                                             asset {
                                                 contract {
-                                                    contract_type {
+                                                    contractType {
                                                         name
                                                     }
                                                     address
                                                     name
                                                     description
                                                 }
-                                                token_id
+                                                tokenId
                                                 name
                                                 description
-                                                image_url
-                                                preview_url
-                                                thumbnail_url
-                                                total_supply
+                                                imageUrl
+                                                previewUrl
+                                                thumbnailUrl
+                                                totalSupply
                                             }
-                                            asset_owners {
+                                            assetOwners {
                                                 account {
                                                     address
                                                 }
