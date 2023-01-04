@@ -188,7 +188,8 @@
                             variables: {
                                 name: nameText.value,
                                 description: descText.value,
-                                address: createItemContractAddressText.value,
+                                address: address,
+                                contract: createItemContractAddressText.value,
                                 totalSupply: parseInt(totalNumber.value),
                             },
                             query:
@@ -197,12 +198,14 @@
                                     $name: String!,
                                     $description: String!,
                                     $address: String!,
+                                    $contract: String!,
                                     $totalSupply: Int!)
                                 { createItem(
                                     imageFile: $imageFile,
                                     name: $name,
                                     description: $description,
                                     address: $address,
+                                    contract: $contract,
                                     totalSupply: $totalSupply) {
                                         success
                                         message
