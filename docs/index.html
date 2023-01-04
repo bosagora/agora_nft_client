@@ -75,8 +75,8 @@
                         <label for="tokenId">Token id:</label>
                         <input type="text" id="tokenId" size="120"
                                value="89697278701889901864060606526707955834850344146599935406839114475468283183154"><br><br>
-                        <label for="asset_contract_shared_address">Asset Contract:</label>
-                        <input type="text" id="asset_contract_shared_address" size="120"
+                        <label for="asset_contract_address">Asset Contract:</label>
+                        <input type="text" id="asset_contract_address" size="120"
                                value="0x2fddd0f488B767E8Dd42aE4E60f0685A2e15b1Fd">
                         <button id="import_nft_btn" type="button" class="btn btn-secondary">Import NFT</button>
                     </form>
@@ -96,10 +96,13 @@
                         <input type="text" id="name" value="NFT_1">
                         <label for="total">Total supply:</label>
                         <input type="number" id="total" value=100><br><br>
-                        <label for="desc">Image:</label>
+                        <label for="asset_contract_address">Asset Contract:</label>
+                        <input type="text" id="create_item_contract_address" size="120"
+                               value="0x2fddd0f488B767E8Dd42aE4E60f0685A2e15b1Fd"><br><br>
+                        <label for="desc">Description:</label>
                         <input type="text" id="desc" size="32" value="NFT description">
-                        <label for="file_upload">Desc:</label>
-                        <input type="file" id="file_upload" name="image_file">
+                        <label for="file_upload">Image:</label>
+                        <input type="file" id="file_upload" name="imageFile"><br><br>
                         <button id="create_asset" type="button" class="btn btn-secondary">Create Asset</button>
                     </form>
                 </div>
@@ -132,7 +135,8 @@
             const createAssetButton = document.getElementById('create_asset')
             const importNftCard = document.getElementById('import_nft_card')
             const tokenIdText = document.getElementById('tokenId')
-            const assetContractSharedAddressText = document.getElementById('asset_contract_shared_address')
+            const assetContractAddressText = document.getElementById('asset_contract_address')
+            const createItemContractAddressText = document.getElementById('create_item_contract_address')
             const importedNftText = document.getElementById('imported_nft')
             const importNftButton = document.getElementById('import_nft_btn')
             let accounts
@@ -184,39 +188,58 @@
                             variables: {
                                 name: nameText.value,
                                 description: descText.value,
-                                owner_address: address,
+                                address: createItemContractAddressText.value,
                                 totalSupply: parseInt(totalNumber.value),
                             },
                             query:
                                 `mutation createItem(
-                                    $image_file: Upload!,
+                                    $imageFile: Upload!,
                                     $name: String!,
                                     $description: String!,
-                                    $owner_address: String!,
+                                    $address: String!,
                                     $totalSupply: Int!)
                                 { createItem(
-                                    image_file: $image_file,
+                                    imageFile: $imageFile,
                                     name: $name,
                                     description: $description,
-                                    owner_address: $owner_address,
+                                    address: $address,
                                     totalSupply: $totalSupply) {
                                         success
                                         message
-                                        asset {
-                                            tokenId
-                                            name
-                                            description
-                                            imageUrl
-                                            totalSupply }
+                                        assetWithOwners {
+                                            asset {
+                                                contract {
+                                                    contractType {
+                                                        name
+                                                    }
+                                                    address
+                                                    name
+                                                    description
+                                                }
+                                                tokenId
+                                                name
+                                                description
+                                                imageUrl
+                                                previewUrl
+                                                thumbnailUrl
+                                                totalSupply
+                                            }
+                                            assetOwners {
+                                                account {
+                                                    address
+                                                }
+                                                quantity
+                                            }
+                                        }
                                     }
                                  }`
                         }))
                         formData.append("map", JSON.stringify({
-                            "image_file": ["variables.image_file"]
+                            "imageFile": ["variables.imageFile"]
                         }))
-                        formData.append("image_file", fileUpload.files[0])
+                        formData.append("imageFile", fileUpload.files[0])
                         const filename = fileUpload.files[0]
-                        console.log("image_file:", filename)
+                        console.log("imageFile:", filename)
                         const response = await fetch(url, {
                             method: 'POST',
                             body: formData,
@@ -249,7 +272,7 @@
                                 operationName: "importNft",
                                 variables: {
                                     tokenId: tokenIdText.value,
-                                    contract: assetContractSharedAddressText.value,
+                                    contract: assetContractAddressText.value,
                                 },
                                 query:
                                     `mutation importNft(
@@ -326,7 +349,7 @@
                         .then(() => signNonce(nonce))
                         .then(() => fetchJwt())
                         .then(() => enableImportNFT())
-                        // .then(() => enableCreateAsset())
+                        .then(() => enableCreateAsset())
                 }
             }
 
